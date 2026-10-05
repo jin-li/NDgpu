@@ -9,6 +9,7 @@ build/
 *.egg
 .venv/
 venv/
+.cache/
 
 # Note: dist/ndgpu-src.zip is a tracked deliverable (uploaded to Colab), so
 # dist/ is intentionally NOT ignored.

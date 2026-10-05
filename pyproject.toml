@@ -15,6 +15,8 @@ dependencies = ["numpy>=1.24", "scipy>=1.10"]
 
 [project.optional-dependencies]
 cuda12 = ["cupy-cuda12x"]
+# CUDA component wheels for hosts without a system-wide toolkit (e.g. NixOS).
+cuda12-ctk = ["cupy-cuda12x[ctk]>=14"]
 cuda11 = ["cupy-cuda11x"]
 test = ["pytest"]
 # External multiphysics coupling (examples/precice). Optional: the internal

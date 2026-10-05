@@ -102,6 +102,43 @@ pip install -e .                 # CPU (NumPy)
 pip install -e .[cuda12]        # + CuPy for CUDA 12.x GPUs
 ```
 
+On NixOS (x86_64 Linux), use the pinned development shell and a project-local
+`uv` environment. Nix supplies Python and the native runtime libraries needed
+by NumPy/SciPy wheels; `uv` installs the editable project and locks its Python
+dependencies. Python downloads are disabled in the shell.
+
+```bash
+nix develop path:.
+uv sync --locked --extra test
+uv run --locked --extra test python examples/bare_reactor.py 16 cpu
+uv run --locked --extra test python examples/reflected_slab.py 90 cpu
+uv run --locked --extra test python examples/hex_lattice.py 2 cpu
+uv run --locked --extra test python examples/transient_rod_drop.py cpu
+uv run --locked --extra test pytest -q tests/verification/test_diffusion_analytic.py
+```
+
+For GPU execution, the `cuda12-ctk` extra installs CuPy and NVIDIA's CUDA
+component wheels, including runtime libraries and compilation headers, without
+a system-wide CUDA toolkit:
+
+```bash
+nix develop path:.
+uv sync --locked --extra test --extra cuda12-ctk
+uv run --locked --extra test --extra cuda12-ctk python examples/bare_reactor.py 32 gpu
+uv run --locked --extra test --extra cuda12-ctk python examples/hpmr_3d.py 1 10 polar gpu
+uv run --locked --extra test --extra cuda12-ctk python examples/speed_benchmark.py 32 64 96
+```
+
+Keep the GPU extra in subsequent `uv run` commands so environment syncing
+retains it. The shell exposes the host driver through `/run/opengl-driver/lib`
+and keeps CuPy's compiled kernel cache under `.cache/cupy/`. GPU processes
+need access to `/dev/nvidia*`; a sandbox that hides those devices can make
+`nvidia-smi` report a driver communication failure even with a healthy host
+driver. Check `nvidia-smi` outside that sandbox before diagnosing the driver.
+
+Keep `flake.lock` and `uv.lock` with the project. `.venv/` and `.cache/` are
+local, ignored artifacts.
+
 ## Documentation
 
 - **[User guide](docs/user_guide.md)** — choose an API, build a new reactor,
