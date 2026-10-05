@@ -179,6 +179,9 @@ unsuccessfully unless actual AMD arrays and the required numerical checks pass.
 
 ## Documentation
 
+- **[Development findings and priorities](docs/development_assessments.md)** —
+  NixOS and GPU validation, branch libraries and Serpent/CASMO5 interfaces,
+  thermal-hydraulics coupling, discontinuity factors and performance limits.
 - **[User guide](docs/user_guide.md)** — choose an API, build a new reactor,
   apply SPH constants, and run steady, transient, and coupled GPU calculations.
 - **[Model API reference](docs/model_api.md)** — builder details, result fields,
