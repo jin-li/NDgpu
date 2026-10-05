@@ -139,6 +139,44 @@ driver. Check `nvidia-smi` outside that sandbox before diagnosing the driver.
 Keep `flake.lock` and `uv.lock` with the project. `.venv/` and `.cache/` are
 local, ignored artifacts.
 
+### AMD GPUs on NixOS (experimental ROCm)
+
+Use the separate ROCm shell and AMD extra on x86_64 Linux:
+
+```bash
+nix develop path:.#rocm
+uv sync --locked --extra test --extra rocm
+uv run --locked --extra test --extra rocm python -c \
+  'import cupy; cupy.show_config(); assert cupy.cuda.runtime.is_hip'
+NDGPU_FUSED=0 uv run --locked --extra test --extra rocm python examples/bare_reactor.py 16 gpu
+uv run --locked --extra test --extra rocm python examples/bare_reactor.py 16 gpu
+uv run --locked --extra test --extra rocm python examples/validate_rocm.py --sizes 8 12
+```
+
+`device="gpu"` requires a GPU and never accepts a CPU fallback. `device="rocm"`
+(or `"hip"`) additionally requires an AMD build of CuPy; `"cuda"` requires a
+CUDA build. CuPy's ROCm build intentionally uses the `cupy.cuda` namespace.
+Device labels identify `rocm (cupy)` or `cuda (cupy)`.
+
+The shell supplies ROCm 7.2.3 from the existing pinned Nixpkgs revision and a
+merged `ROCM_HOME` for CuPy header discovery. The `rocm` extra pins the Python
+3.13-compatible `cupy-rocm-7-0` wheel. ROCm and CUDA extras conflict because
+they install the same `cupy` module; keep your selected extra in every `uv run`
+command. The default CPU/NVIDIA shell remains available. ROCm provisioning can
+download a large toolkit closure on first use.
+
+The host must expose `/dev/kfd` and `/dev/dri/renderD*` with read/write access.
+Check `rocminfo` in the same execution environment as Python. A sandbox hiding
+these devices can report missing devices even when host ROCm works. No system
+configuration changes are required by the project shell. Do not set
+`HSA_OVERRIDE_GFX_VERSION` to impersonate a different GPU.
+
+See [AMD validation and limitations](docs/amd_rocm.md) for halo's measured
+results, explicit tolerances, graph fallback, sparse limitations and benchmark
+methodology. Raw local reports default to ignored `results/`; selected reports
+for review belong under `benchmark-results/`. The validation command exits
+unsuccessfully unless actual AMD arrays and the required numerical checks pass.
+
 ## Documentation
 
 - **[User guide](docs/user_guide.md)** — choose an API, build a new reactor,
